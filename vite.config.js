@@ -6,15 +6,14 @@ import { fileURLToPath } from 'node:url';
 import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
 import { playwright } from '@vitest/browser-playwright';
 
-// Correction propre du dirname pour ES Modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// On n'utilise PLUS DU TOUT le mot "__dirname" directement
+const currentDir = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      '@': path.resolve(currentDir, './src'),
     },
   },
   test: {
@@ -22,7 +21,7 @@ export default defineConfig({
       extends: true,
       plugins: [
         storybookTest({
-          configDir: path.join(__dirname, '.storybook')
+          configDir: path.resolve(currentDir, '.storybook') // On utilise currentDir ici
         })
       ],
       test: {
