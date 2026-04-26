@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
 import { playwright } from '@vitest/browser-playwright';
 
-// On n'utilise PLUS DU TOUT le mot "__dirname" directement
+
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({

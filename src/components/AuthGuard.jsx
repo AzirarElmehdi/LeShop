@@ -1,19 +1,19 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
-import LoginForm from '../pages/LoginForm'
+import LoginForm from './LoginForm';
 
 export default function AuthGuard({ children }) {
   const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // 1. Vérifie la session actuelle au chargement
+    // Vérifie la session actuelle au chargement
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
       setLoading(false)
     })
 
-    // 2. Écoute les changements d'état (login/logout)
+    // Changements d'état (login/logout)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session)
     })
@@ -29,11 +29,11 @@ export default function AuthGuard({ children }) {
     )
   }
 
-  // Si pas de session, on affiche le formulaire de Login au lieu de la page Admin
+  // Si pas de session, on affiche le formulaire de Login.
   if (!session) {
     return <LoginForm />
   }
 
-  // Si session ok, on affiche la page demandée (Admin)
+  // Si session connecter, on affiche la page demandée.
   return <>{children}</>
 }
