@@ -17,20 +17,20 @@ export default function Admin() {
     name: '', price: '', category: '', brand: '', imageUrl: '', discount: 0 
   })
 
-  // --- DATA FETCHING (Déclaré en haut pour éviter l'erreur de Hoisting/Linter) ---
-  const loadInitialData = async () => {
-    // 1. Fetch Inventory
-    const { data: prodData } = await supabase.from('products').select('*')
-    if (prodData) setInventory(prodData)
-
-    // 2. Fetch Marketing Rules
-    const { data: shopData, error } = await supabase.from('shop_settings').select('*')
-    if (shopData && !error) setCampaigns(shopData)
-  }
-
-  // --- LIFECYCLE ---
+  // --- LIFECYCLE & DATA FETCHING ---
+  // La fonction est DANS le useEffect pour satisfaire le linter React
   useEffect(() => { 
-    loadInitialData() 
+    const fetchAllData = async () => {
+      // 1. Fetch Inventory
+      const { data: prodData } = await supabase.from('products').select('*')
+      if (prodData) setInventory(prodData)
+
+      // 2. Fetch Marketing Rules
+      const { data: shopData, error } = await supabase.from('shop_settings').select('*')
+      if (shopData && !error) setCampaigns(shopData)
+    }
+
+    fetchAllData() 
   }, [])
 
 
