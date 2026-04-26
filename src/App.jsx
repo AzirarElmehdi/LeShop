@@ -1,8 +1,11 @@
+import Admin from './pages/Admin'
+import AuthGuard from './components/AuthGuard'
+
 function App() {
   return (
-    <div>
-      <h1>TechStore Ready</h1>
-    </div>
+    <AuthGuard>
+      <Admin />
+    </AuthGuard>
   )
 }
 
