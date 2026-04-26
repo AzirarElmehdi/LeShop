@@ -17,21 +17,20 @@ export default function Admin() {
     name: '', price: '', category: '', brand: '', imageUrl: '', discount: 0 
   })
 
-  // --- DATA FETCHING (Declarations first to avoid Hoisting errors) ---
-  async function fetchInventory() {
-    const { data } = await supabase.from('products').select('*')
-    setInventory(data || [])
-  }
+  // --- DATA FETCHING (Déclaré en haut pour éviter l'erreur de Hoisting/Linter) ---
+  const loadInitialData = async () => {
+    // 1. Fetch Inventory
+    const { data: prodData } = await supabase.from('products').select('*')
+    if (prodData) setInventory(prodData)
 
-  async function fetchShopSettings() {
-    const { data, error } = await supabase.from('shop_settings').select('*')
-    if (data && !error) setCampaigns(data)
+    // 2. Fetch Marketing Rules
+    const { data: shopData, error } = await supabase.from('shop_settings').select('*')
+    if (shopData && !error) setCampaigns(shopData)
   }
 
   // --- LIFECYCLE ---
   useEffect(() => { 
-    fetchInventory() 
-    fetchShopSettings() 
+    loadInitialData() 
   }, [])
 
 
