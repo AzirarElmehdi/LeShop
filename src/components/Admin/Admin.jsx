@@ -17,11 +17,7 @@ export default function Admin() {
     name: '', price: '', category: '', brand: '', imageUrl: '', discount: 0 
   })
 
-  useEffect(() => { 
-    fetchInventory() 
-    fetchShopSettings() 
-  }, [])
-
+  // --- DATA FETCHING (Declarations first to avoid Hoisting errors) ---
   async function fetchInventory() {
     const { data } = await supabase.from('products').select('*')
     setInventory(data || [])
@@ -32,13 +28,18 @@ export default function Admin() {
     if (data && !error) setCampaigns(data)
   }
 
+  // --- LIFECYCLE ---
+  useEffect(() => { 
+    fetchInventory() 
+    fetchShopSettings() 
+  }, [])
 
 
+  // --- MARKETING LOGIC ---
   const handleDeployRule = async () => {
     if (formCampaign.value <= 0) return alert("Please set a valid percentage")
     
     setIsSyncing(true)
-    // On s'assure d'envoyer les noms de colonnes EXACTS de ta table SQL
     const { data, error } = await supabase
       .from('shop_settings')
       .insert([{
@@ -60,7 +61,6 @@ export default function Admin() {
   }
 
   const deleteRule = async (id) => {
-    // On cible la règle par son rule_id généré par Supabase.
     const { error } = await supabase
       .from('shop_settings')
       .delete()
@@ -82,8 +82,7 @@ export default function Admin() {
     }
   }
 
-  // --- LOGIQUE PRODUITS ---
-
+  // --- PRODUCT CRUD LOGIC ---
   const handleProductSubmit = async (e) => {
     e.preventDefault()
     const payload = { 
@@ -169,7 +168,7 @@ export default function Admin() {
             <div className="pt-8 border-t border-slate-800/60">
               <div className="flex justify-between items-center mb-4">
                 <p className="text-[10px] font-bold text-blue-500 uppercase tracking-widest">Sales Engine</p>
-                <button onClick={handleKillSwitch} className="text-[8px] text-slate-500 hover:text-red-500 font-black transition-colors uppercase">Kill All</button>
+                <button type="button" onClick={handleKillSwitch} className="text-[8px] text-slate-500 hover:text-red-500 font-black transition-colors uppercase">Kill All</button>
               </div>
 
               <div className="space-y-3 bg-slate-950/40 p-4 rounded-2xl border border-slate-800/50 mb-4 shadow-inner">
@@ -195,6 +194,7 @@ export default function Admin() {
                 <div className="flex gap-2">
                   <input type="number" placeholder="%" value={formCampaign.value} className="w-16 bg-slate-800/50 border border-slate-700 p-2 rounded-lg text-[10px] text-center outline-none" onChange={e => setFormCampaign({...formCampaign, value: e.target.value})} />
                   <button 
+                    type="button"
                     onClick={handleDeployRule}
                     disabled={isSyncing}
                     className="flex-1 bg-blue-600/20 text-blue-400 border border-blue-500/20 text-[9px] font-black uppercase rounded-lg hover:bg-blue-600 hover:text-white transition-all disabled:opacity-50"
@@ -210,7 +210,7 @@ export default function Admin() {
                     <p className="text-[9px] font-bold">
                       <span className="text-blue-400">-{c.campaign_value}%</span> on {c.campaign_type === 'all' ? 'Store' : c.campaign_target}
                     </p>
-                    <button onClick={() => deleteRule(c.rule_id)} className="text-slate-500 hover:text-red-500 px-1 transition-colors">×</button>
+                    <button type="button" onClick={() => deleteRule(c.rule_id)} className="text-slate-500 hover:text-red-500 px-1 transition-colors">×</button>
                   </div>
                 ))}
               </div>
