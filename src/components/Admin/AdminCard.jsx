@@ -1,92 +1,107 @@
+import { calculateFinalPrice } from '../../utils/priceEngine'
+
 export default function AdminCard({ product, onEdit, onDelete, globalSales = [] }) {
-  
-  // 👇 SÉCURITÉ ABSOLUE : Gère le null, l'undefined, et les majuscules/minuscules
-  const stockQty = Number(product.stock ?? product.Stock ?? 0);
-  
-  const itemDisc = product.discount || 0;
-  
-  // SCAN DES RÈGLES GLOBALES
-  const specificRule = globalSales.find(rule => 
-    (rule.campaign_type === 'category' && rule.campaign_target?.toLowerCase() === product.category?.toLowerCase()) ||
-    (rule.campaign_type === 'brand' && rule.campaign_target?.toLowerCase() === product.brand?.toLowerCase())
-  );
 
-  const storewideRule = globalSales.find(rule => rule.campaign_type === 'all');
+  // On récupère le stock
+  const stockQty = Number(product.Stock ?? 0);
 
-  const eventDisc = specificRule ? specificRule.campaign_value : 0;
-  const globalDisc = storewideRule ? storewideRule.campaign_value : 0;
-  
-  // CALCUL SUCCESSIF 
-  const afterItem = product.price * (1 - itemDisc / 100);
-  const afterEvent = afterItem * (1 - eventDisc / 100);
-  const finalPrice = (afterEvent * (1 - globalDisc / 100)).toFixed(2);
-
-  const hasAnySale = itemDisc > 0 || eventDisc > 0 || globalDisc > 0;
+  // Moteur de prix
+  const { finalPrice, hasDiscount, details } = calculateFinalPrice(product, globalSales);
 
   return (
     <div className="group relative bg-slate-900/40 border border-slate-800 rounded-3xl overflow-hidden hover:border-blue-600/40 transition-all duration-500 shadow-xl flex flex-col">
       
-      {/* BADGES PROMO */}
-      {hasAnySale && (
+      {/* Badges promos (item / category-brand / global) */}
+      {hasDiscount && (
         <div className="absolute top-4 left-4 z-10 flex flex-col gap-1.5">
-          {itemDisc > 0 && (
+          
+          {details.itemDisc > 0 && (
             <span className="bg-red-600 text-[8px] font-black px-2 py-0.5 rounded shadow-lg uppercase tracking-tighter">
-              Item -{itemDisc}%
+              Item -{details.itemDisc}%
             </span>
           )}
-          {eventDisc > 0 && (
+
+          {details.eventDisc > 0 && (
             <span className="bg-blue-600 text-[8px] font-black px-2 py-0.5 rounded shadow-lg uppercase tracking-tighter">
-              {specificRule.campaign_type} -{eventDisc}%
+              {details.specificType} -{details.eventDisc}%
             </span>
           )}
-          {globalDisc > 0 && (
+
+          {details.globalDisc > 0 && (
             <span className="bg-amber-500 text-[8px] font-black px-2 py-0.5 rounded shadow-lg uppercase tracking-tighter text-slate-950">
-              Store -{globalDisc}%
+              Store -{details.globalDisc}%
             </span>
           )}
+
         </div>
       )}
 
-      {/* ADMIN CONTROLS */}
+      {/* Boutons admin (edit/delete) */}
       <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-all translate-y-[-5px] group-hover:translate-y-0 z-10">
-        <button onClick={() => onEdit(product)} className="p-2 bg-slate-800/90 hover:bg-blue-600 rounded-xl backdrop-blur-sm text-[10px] transition-colors shadow-lg">✏️</button>
-        <button onClick={() => onDelete(product.id)} className="p-2 bg-slate-800/90 hover:bg-red-600 rounded-xl backdrop-blur-sm text-[10px] transition-colors shadow-lg">🗑️</button>
+        <button 
+          onClick={() => onEdit(product)} 
+          className="p-2 bg-slate-800/90 hover:bg-blue-600 rounded-xl backdrop-blur-sm text-[10px] transition-colors shadow-lg"
+        >
+          ✏️
+        </button>
+
+        <button 
+          onClick={() => onDelete(product.id)} 
+          className="p-2 bg-slate-800/90 hover:bg-red-600 rounded-xl backdrop-blur-sm text-[10px] transition-colors shadow-lg"
+        >
+          🗑️
+        </button>
       </div>
 
+      {/* Image produit */}
       <div className="h-44 overflow-hidden bg-slate-800 relative">
-        <img src={product.image_url} alt="" className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700 ease-in-out" />
+        <img 
+          src={product.image_url} 
+          alt={product.name} 
+          className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700 ease-in-out" 
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 to-transparent opacity-60" />
       </div>
       
       <div className="p-5 flex flex-col flex-1">
-        <h3 className="font-bold text-white text-sm mb-3 truncate tracking-tight">{product.name}</h3>
+        
+        <h3 className="font-bold text-white text-sm mb-3 truncate tracking-tight">
+          {product.name}
+        </h3>
 
+        {/* Prix + ancien prix si promo */}
         <div className="flex items-end gap-2 mb-5">
-          <p className="text-blue-400 font-black text-xl leading-none">{finalPrice} €</p>
-          {hasAnySale && (
+          <p className="text-blue-400 font-black text-xl leading-none">
+            {finalPrice} €
+          </p>
+
+          {hasDiscount && (
             <span className="text-slate-600 line-through text-[11px] mb-0.5 font-medium italic opacity-50">
               {product.price}€
             </span>
           )}
         </div>
 
+        {/* Footer : catégorie / brand / FOMO */}
         <div className="flex items-center gap-2 pt-4 border-t border-slate-800/40 mt-auto">
+          
           <span className="text-[7px] uppercase font-black tracking-[0.2em] bg-slate-800 text-slate-500 px-2.5 py-1 rounded-full border border-slate-700/30">
             {product.category || 'N/A'}
           </span>
+
           {product.brand && (
             <span className="text-[7px] uppercase font-black tracking-[0.2em] bg-blue-500/10 text-blue-400 px-2.5 py-1 rounded-full border border-blue-500/20">
               {product.brand}
             </span>
           )}
           
-          {/* 👇 LA NOUVELLE LOGIQUE MARKETING FOMO 👇 */}
+          {/* FOMO : rupture / stock faible */}
           {stockQty <= 0 ? (
             <span className="ml-auto text-[8px] font-black uppercase tracking-widest px-2 py-1 rounded-md bg-red-500/10 text-red-500 border border-red-500/20 animate-pulse">
               SOLD OUT
             </span>
           ) : stockQty <= 10 ? (
-            <span className="ml-auto text-[8px] font-black uppercase tracking-widest px-2 py-1 rounded-md bg-orange-500/10 text-orange-400 border border-orange-500/20 shadow-[0_0_10px_rgba(249,115,22,0.2)]">
+            <span className="ml-auto text-[8px] font-black uppercase tracking-widest px-2 py-1 rounded-md bg-orange-500/10 text-orange-400 border border-orange-500/20">
               Plus que {stockQty} !
             </span>
           ) : null}
