@@ -1,15 +1,16 @@
 export default function AdminCard({ product, onEdit, onDelete, globalSales = [] }) {
   
+  // 👇 SÉCURITÉ ABSOLUE : Gère le null, l'undefined, et les majuscules/minuscules
+  const stockQty = Number(product.stock ?? product.Stock ?? 0);
+  
   const itemDisc = product.discount || 0;
   
   // SCAN DES RÈGLES GLOBALES
-  // On cherche une règle spécifique.
   const specificRule = globalSales.find(rule => 
     (rule.campaign_type === 'category' && rule.campaign_target?.toLowerCase() === product.category?.toLowerCase()) ||
     (rule.campaign_type === 'brand' && rule.campaign_target?.toLowerCase() === product.brand?.toLowerCase())
   );
 
-  // On cherche la règle "EVERYTHING".
   const storewideRule = globalSales.find(rule => rule.campaign_type === 'all');
 
   const eventDisc = specificRule ? specificRule.campaign_value : 0;
@@ -23,7 +24,7 @@ export default function AdminCard({ product, onEdit, onDelete, globalSales = [] 
   const hasAnySale = itemDisc > 0 || eventDisc > 0 || globalDisc > 0;
 
   return (
-    <div className="group relative bg-slate-900/40 border border-slate-800 rounded-3xl overflow-hidden hover:border-blue-600/40 transition-all duration-500 shadow-xl">
+    <div className="group relative bg-slate-900/40 border border-slate-800 rounded-3xl overflow-hidden hover:border-blue-600/40 transition-all duration-500 shadow-xl flex flex-col">
       
       {/* BADGES PROMO */}
       {hasAnySale && (
@@ -48,8 +49,8 @@ export default function AdminCard({ product, onEdit, onDelete, globalSales = [] 
 
       {/* ADMIN CONTROLS */}
       <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-all translate-y-[-5px] group-hover:translate-y-0 z-10">
-        <button onClick={() => onEdit(product)} className="p-2 bg-slate-800/90 hover:bg-blue-600 rounded-xl backdrop-blur-sm text-[10px] transition-colors">✏️</button>
-        <button onClick={() => onDelete(product.id)} className="p-2 bg-slate-800/90 hover:bg-red-600 rounded-xl backdrop-blur-sm text-[10px] transition-colors">🗑️</button>
+        <button onClick={() => onEdit(product)} className="p-2 bg-slate-800/90 hover:bg-blue-600 rounded-xl backdrop-blur-sm text-[10px] transition-colors shadow-lg">✏️</button>
+        <button onClick={() => onDelete(product.id)} className="p-2 bg-slate-800/90 hover:bg-red-600 rounded-xl backdrop-blur-sm text-[10px] transition-colors shadow-lg">🗑️</button>
       </div>
 
       <div className="h-44 overflow-hidden bg-slate-800 relative">
@@ -57,7 +58,7 @@ export default function AdminCard({ product, onEdit, onDelete, globalSales = [] 
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 to-transparent opacity-60" />
       </div>
       
-      <div className="p-5">
+      <div className="p-5 flex flex-col flex-1">
         <h3 className="font-bold text-white text-sm mb-3 truncate tracking-tight">{product.name}</h3>
 
         <div className="flex items-end gap-2 mb-5">
@@ -69,7 +70,7 @@ export default function AdminCard({ product, onEdit, onDelete, globalSales = [] 
           )}
         </div>
 
-        <div className="flex gap-2 pt-4 border-t border-slate-800/40">
+        <div className="flex items-center gap-2 pt-4 border-t border-slate-800/40 mt-auto">
           <span className="text-[7px] uppercase font-black tracking-[0.2em] bg-slate-800 text-slate-500 px-2.5 py-1 rounded-full border border-slate-700/30">
             {product.category || 'N/A'}
           </span>
@@ -78,6 +79,18 @@ export default function AdminCard({ product, onEdit, onDelete, globalSales = [] 
               {product.brand}
             </span>
           )}
+          
+          {/* 👇 LA NOUVELLE LOGIQUE MARKETING FOMO 👇 */}
+          {stockQty <= 0 ? (
+            <span className="ml-auto text-[8px] font-black uppercase tracking-widest px-2 py-1 rounded-md bg-red-500/10 text-red-500 border border-red-500/20 animate-pulse">
+              SOLD OUT
+            </span>
+          ) : stockQty <= 10 ? (
+            <span className="ml-auto text-[8px] font-black uppercase tracking-widest px-2 py-1 rounded-md bg-orange-500/10 text-orange-400 border border-orange-500/20 shadow-[0_0_10px_rgba(249,115,22,0.2)]">
+              Plus que {stockQty} !
+            </span>
+          ) : null}
+
         </div>
       </div>
     </div>

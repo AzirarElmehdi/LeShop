@@ -9,34 +9,29 @@ export default function Admin() {
   const [editingId, setEditingId] = useState(null)
   const [isSyncing, setIsSyncing] = useState(false)
 
-  // Marketing Engine State
   const [campaigns, setCampaigns] = useState([]) 
-  const [formCampaign, setFormCampaign] = useState({ type: 'all', target: '', value: 0 })
+  const [formCampaign, setFormCampaign] = useState({ type: 'all', target: '', value: '' }) 
 
   const [form, setForm] = useState({ 
-    name: '', price: '', category: '', brand: '', imageUrl: '', discount: 0 
+    name: '', price: '', category: '', brand: '', imageUrl: '', discount: '', stock: '' 
   })
 
   // --- LIFECYCLE & DATA FETCHING ---
-  // La fonction est DANS le useEffect pour satisfaire le linter React
   useEffect(() => { 
     const fetchAllData = async () => {
-      // 1. Fetch Inventory
       const { data: prodData } = await supabase.from('products').select('*')
       if (prodData) setInventory(prodData)
 
-      // 2. Fetch Marketing Rules
       const { data: shopData, error } = await supabase.from('shop_settings').select('*')
       if (shopData && !error) setCampaigns(shopData)
     }
-
     fetchAllData() 
   }, [])
 
-
   // --- MARKETING LOGIC ---
   const handleDeployRule = async () => {
-    if (formCampaign.value <= 0) return alert("Please set a valid percentage")
+    if (formCampaign.value <= 0) return alert("❌ Erreur : Le pourcentage de promo doit être positif.")
+    if (formCampaign.value > 100) return alert("❌ Erreur : Tu ne peux pas faire une promo de plus de 100% !")
     
     setIsSyncing(true)
     const { data, error } = await supabase
@@ -50,47 +45,63 @@ export default function Admin() {
 
     if (!error) {
       setCampaigns([...campaigns, data[0]])
-      setFormCampaign({ type: 'all', target: '', value: 0 })
-      alert("🚀 Campaign deployed!")
+      setFormCampaign({ type: 'all', target: '', value: '' })
+      alert("🚀 Campagne déployée avec succès !")
     } else {
       console.error("Deploy error:", error)
-      alert("Failed to deploy. Check Supabase Policies.")
+      alert("Échec du déploiement. Vérifie tes règles Supabase.")
     }
     setIsSyncing(false)
   }
 
   const deleteRule = async (id) => {
-    const { error } = await supabase
-      .from('shop_settings')
-      .delete()
-      .eq('rule_id', id)
-
-    if (!error) {
-      setCampaigns(prev => prev.filter(c => c.rule_id !== id))
-    } else {
-      console.error("Delete rule error:", error)
-    }
+    const { error } = await supabase.from('shop_settings').delete().eq('rule_id', id)
+    if (!error) setCampaigns(prev => prev.filter(c => c.rule_id !== id))
   }
 
   const handleKillSwitch = async () => {
-    if(!window.confirm("Nuclear Option: Wipe ALL marketing rules?")) return
+    if(!window.confirm("☢️ Option Nucléaire : Effacer TOUTES les règles de promotion ?")) return
     const { error } = await supabase.from('shop_settings').delete().neq('rule_id', '00000000-0000-0000-0000-000000000000') 
     if (!error) {
       setCampaigns([])
-      alert("Sales engine halted. Full reset complete.")
+      alert("Ventes flash stoppées. Remise à zéro complète.")
     }
   }
 
   // --- PRODUCT CRUD LOGIC ---
   const handleProductSubmit = async (e) => {
     e.preventDefault()
+
+    // 🛡️ 1. LE VIDEUR (SÉCURITÉ FRONT-END)
+    // Vérification des champs textes vides (sécurité supplémentaire au 'required' HTML)
+    if (!form.name.trim() || !form.category.trim() || !form.brand.trim() || !form.imageUrl.trim()) {
+      return alert("❌ Action refusée : Les champs Nom, Catégorie, Marque et Image URL sont obligatoires.")
+    }
+
+    const parsedPrice = parseFloat(form.price);
+    const parsedDiscount = parseInt(form.discount || 0);
+    const parsedStock = parseInt(form.stock || 0);
+
+    // Vérification des valeurs négatives ou illogiques
+    if (parsedPrice < 0) {
+      return alert("❌ Action refusée : Le prix ne peut pas être un nombre négatif.")
+    }
+    if (parsedDiscount < 0 || parsedDiscount > 100) {
+      return alert("❌ Action refusée : La promotion doit être comprise entre 0 et 100%.")
+    }
+    if (parsedStock < 0) {
+      return alert("❌ Action refusée : Tu ne peux pas avoir un stock inférieur à zéro (pas de dette de stock !).")
+    }
+
+    // 📦 2. LE PAYLOAD SÉCURISÉ
     const payload = { 
-      name: form.name, 
-      price: parseFloat(form.price), 
-      category: form.category, 
-      brand: form.brand, 
-      image_url: form.imageUrl,
-      discount: parseInt(form.discount || 0)
+      name: form.name.trim(), 
+      price: parsedPrice, 
+      category: form.category.trim(), 
+      brand: form.brand.trim(), 
+      image_url: form.imageUrl.trim(),
+      discount: parsedDiscount,
+      Stock: parsedStock // 👈 (Je te laisse la majuscule ici vu ta config Supabase)
     }
 
     if (editingId) {
@@ -98,16 +109,22 @@ export default function Admin() {
       if (!error) {
         setInventory(inventory.map(item => item.id === editingId ? data[0] : item))
         setEditingId(null)
+      } else {
+        alert(`❌ Erreur BDD : ${error.message}`)
       }
     } else {
       const { data, error } = await supabase.from('products').insert([payload]).select()
-      if (!error) setInventory([...inventory, data[0]])
+      if (!error) {
+        setInventory([...inventory, data[0]])
+      } else {
+        alert(`❌ Erreur BDD : ${error.message}`)
+      }
     }
     resetForm()
   }
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Confirm deletion?")) return
+    if (!window.confirm("🗑️ Confirmer la suppression définitive du produit ?")) return
     const { error } = await supabase.from('products').delete().eq('id', id)
     if (!error) setInventory(inventory.filter(item => item.id !== id))
   }
@@ -116,13 +133,13 @@ export default function Admin() {
     setEditingId(product.id)
     setForm({ 
       name: product.name, price: product.price, category: product.category, 
-      brand: product.brand, imageUrl: product.image_url, discount: product.discount || 0 
+      brand: product.brand, imageUrl: product.image_url, discount: product.discount || '', stock: product.Stock || ''
     })
     setIsSidebarOpen(true)
   }
 
   const resetForm = () => {
-    setForm({ name: '', price: '', category: '', brand: '', imageUrl: '', discount: 0 })
+    setForm({ name: '', price: '', category: '', brand: '', imageUrl: '', discount: '', stock: '' })
     setEditingId(null)
   }
 
@@ -145,19 +162,33 @@ export default function Admin() {
           <div className="flex-1 overflow-y-auto space-y-12 pr-2 custom-scrollbar">
             <form onSubmit={handleProductSubmit} className="space-y-4">
               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Inventory Management</p>
-              <input placeholder="Product Name" value={form.name} onChange={e => setForm({...form, name: e.target.value})} className="w-full bg-slate-800/40 border border-slate-700 p-2.5 rounded-xl text-sm outline-none focus:border-blue-600" required />
+              
+              <div>
+                <input placeholder="Nom du Produit" value={form.name} onChange={e => setForm({...form, name: e.target.value})} className="w-full bg-slate-800/40 border border-slate-700 p-2.5 rounded-xl text-sm outline-none focus:border-blue-600" required />
+              </div>
               
               <div className="flex gap-2">
-                <input type="number" placeholder="MSRP" value={form.price} onChange={e => setForm({...form, price: e.target.value})} className="w-1/2 bg-slate-800/40 border border-slate-700 p-2.5 rounded-xl text-sm outline-none" required />
-                <input type="number" placeholder="Disc %" value={form.discount} onChange={e => setForm({...form, discount: e.target.value})} className="w-1/2 bg-slate-800/40 border border-slate-700 p-2.5 rounded-xl text-sm outline-none" />
+                <div className="w-1/3">
+                  <label className="text-[8px] text-slate-500 uppercase tracking-widest mb-1 block pl-1">Prix</label>
+                  <input type="number" step="0.01" placeholder="€" value={form.price} onChange={e => setForm({...form, price: e.target.value})} className="w-full bg-slate-800/40 border border-slate-700 p-2.5 rounded-xl text-sm outline-none focus:border-blue-600" required />
+                </div>
+                <div className="w-1/3">
+                  <label className="text-[8px] text-slate-500 uppercase tracking-widest mb-1 block pl-1">Promo</label>
+                  <input type="number" placeholder="%" value={form.discount} onChange={e => setForm({...form, discount: e.target.value})} className="w-full bg-slate-800/40 border border-slate-700 p-2.5 rounded-xl text-sm outline-none focus:border-blue-600" />
+                </div>
+                <div className="w-1/3">
+                  <label className="text-[8px] text-slate-500 uppercase tracking-widest mb-1 block pl-1">Stock</label>
+                  <input type="number" placeholder="Qté" value={form.stock} onChange={e => setForm({...form, stock: e.target.value})} className="w-full bg-slate-800/40 border border-slate-700 p-2.5 rounded-xl text-sm outline-none focus:border-blue-600" required />
+                </div>
               </div>
 
               <div className="flex gap-2">
-                <input placeholder="Category" value={form.category} onChange={e => setForm({...form, category: e.target.value})} className="w-1/2 bg-slate-800/40 border border-slate-700 p-2.5 rounded-xl text-sm" />
-                <input placeholder="Brand" value={form.brand} onChange={e => setForm({...form, brand: e.target.value})} className="w-1/2 bg-slate-800/40 border border-slate-700 p-2.5 rounded-xl text-sm" />
+                {/* Ajout des required ici aussi ! */}
+                <input placeholder="Catégorie" value={form.category} onChange={e => setForm({...form, category: e.target.value})} className="w-1/2 bg-slate-800/40 border border-slate-700 p-2.5 rounded-xl text-sm focus:border-blue-600 outline-none" required />
+                <input placeholder="Marque" value={form.brand} onChange={e => setForm({...form, brand: e.target.value})} className="w-1/2 bg-slate-800/40 border border-slate-700 p-2.5 rounded-xl text-sm focus:border-blue-600 outline-none" required />
               </div>
 
-              <input placeholder="Image URL" value={form.imageUrl} onChange={e => setForm({...form, imageUrl: e.target.value})} className="w-full bg-slate-800/40 border border-slate-700 p-2.5 rounded-xl text-sm" required />
+              <input placeholder="Image URL" value={form.imageUrl} onChange={e => setForm({...form, imageUrl: e.target.value})} className="w-full bg-slate-800/40 border border-slate-700 p-2.5 rounded-xl text-sm focus:border-blue-600 outline-none" required />
               
               <button className={`w-full py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 shadow-xl ${editingId ? 'bg-orange-600 shadow-orange-900/20' : 'bg-blue-600 shadow-blue-900/20 hover:bg-blue-500'}`}>
                 {editingId ? 'Confirm Updates' : 'Commit to Shop'}
