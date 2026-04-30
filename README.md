@@ -10,7 +10,7 @@ E-commerce fullstack construit avec React, Supabase et Tailwind CSS. Le projet c
 
 | Côté | Technologie |
 |------|-------------|
-| Frontend | React 18, React Router v6 |
+| Frontend | React 19, React Router v7 |
 | Styling | Tailwind CSS |
 | Backend / BDD | Supabase (PostgreSQL + Auth) |
 | Déploiement | Vercel |
@@ -94,5 +94,26 @@ VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```bash
 npm run dev
 ```
+
+---
+
+## Améliorations prévues
+
+Ce projet a été conçu dès le départ pour évoluer. L'architecture (contexts globaux, moteur de prix isolé, pagination serveur) a été pensée pour absorber ces ajouts sans refonte majeure.
+
+**Comptes utilisateurs & profils**
+Création de comptes publics avec authentification Supabase, profils clients, sauvegarde des adresses de livraison et historique de commandes.
+
+**Paiement**
+Intégration de Stripe pour gérer les paiements sécurisés, les webhooks de confirmation de commande et la gestion des remboursements.
+
+**Moteur de recommandations**
+Algorithme de suggestions basé sur les préférences de navigation de chaque utilisateur et les produits les plus consultés / ajoutés au panier du moment.
+
+**Barre promotionnelle**
+Bandeau dynamique en haut de page piloté depuis le panel admin pour mettre en avant les offres actives et les codes promo.
+
+**Gestion des produits avancée**
+Remplacement du système d'URL manuelles par un vrai uploader d'images (Supabase Storage), gestion des variantes produit (taille, couleur) et import en masse via CSV.
 
 ---
