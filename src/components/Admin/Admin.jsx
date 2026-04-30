@@ -45,16 +45,20 @@ export default function Admin() {
   }, [])
 
   // Mapping automatique des données pour éviter de tout resaisir en mode builder
-  useEffect(() => {
-    if (!selectedProductForBuilder) return
-    const prod = inventory.find(p => p.id == selectedProductForBuilder)
-    if (!prod) return
+  const handleProductSelect = (e) => {
+  const id = e.target.value;
+  setSelectedProductForBuilder(id);
+  
+  const prod = inventory.find(p => p.id == id);
+  if (prod) {
     setFormBuilder({
-    description_longue: prod.description_longue || '',
-    images_secondaires: prod.images_secondaires ? prod.images_secondaires.join(', ') : ''
-    })
-  }, [selectedProductForBuilder])
-
+      description_longue: prod.description_longue || '',
+      images_secondaires: prod.images_secondaires ? prod.images_secondaires.join(', ') : ''
+    });
+    } else {
+      setFormBuilder({ description_longue: '', images_secondaires: '' });
+    }
+  };
   const handleProductSubmit = async (e) => {
     e.preventDefault()
     // Cast forcé des types pour éviter les erreurs de schéma Supabase
