@@ -1,16 +1,98 @@
-# React + Vite
+# AZMethods Shop
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+E-commerce fullstack construit avec React, Supabase et Tailwind CSS. Le projet couvre l'ensemble du cycle d'une boutique en ligne : catalogue produits, panier, pages produit dynamiques, moteur de promotions et panel d'administration protégé.
 
-Currently, two official plugins are available:
+**[→ Voir le site en live](https://le-shop.vercel.app/)**
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
 
-## React Compiler
+## Stack technique
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+| Côté | Technologie |
+|------|-------------|
+| Frontend | React 18, React Router v6 |
+| Styling | Tailwind CSS |
+| Backend / BDD | Supabase (PostgreSQL + Auth) |
+| Déploiement | Vercel |
+| CI | ESLint (GitHub Actions) |
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Fonctionnalités
+
+**Boutique**
+- Catalogue avec pagination côté serveur (`.range()` Supabase)
+- Filtrage par marque via `ShopContext` (zéro re-fetch)
+- Badges de stock dynamiques : low stock / sold out
+- Page produit dédiée avec galerie photos et description longue
+
+**Panier**
+- Persistance via `localStorage` avec hydratation au boot
+- Contrôle de stock en temps réel (bloque si quantité > stock disponible)
+- Calcul des promotions appliqué dynamiquement à chaque ligne
+
+**Moteur de promotions (`priceEngine.js`)**
+- 3 niveaux de remise cumulatifs : item → catégorie/marque → tout le site
+- Pure function réutilisée côté boutique, panier et panel admin
+
+**Panel Admin** *(accès protégé)*
+- Gestion des produits : ajout, édition, suppression
+- Gestion des stores / marques
+- Page Builder : description longue + galerie secondaire par produit
+- Déploiement de règles promotionnelles globales
+
+---
+
+## Architecture
+
+```
+src/
+├── components/
+│   ├── Admin/          # Panel admin (Admin.jsx, AdminCard.jsx)
+│   ├── layout/         # Layout global avec header sticky et CartContext
+│   └── UI/             # Composants réutilisables (AddToCartButton)
+├── context/
+│   ├── CartContext.jsx  # Panier global + calcul totalPrice
+│   └── ShopContext.jsx  # Campaigns + stores fetchés une seule fois
+├── pages/
+│   ├── Home.jsx         # Catalogue avec pagination
+│   ├── Cart.jsx         # Page panier
+│   └── ProductDetail.jsx
+├── utils/
+│   └── priceEngine.js   # Moteur de calcul de prix isolé et testable
+└── lib/
+    └── supabase.js      # Instance client unique
+```
+
+---
+
+## Démo Admin
+
+```
+URL     : https://le-shop.vercel.app/admin
+Email   : demo@admin.fr
+Password: 123456789
+```
+
+---
+
+## Lancer le projet en local
+
+```bash
+git clone https://github.com/ton-username/LeShop.git
+cd LeShop
+npm install
+```
+
+Créer un fichier `.env` à la racine :
+
+```env
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+```bash
+npm run dev
+```
+
+---

@@ -194,7 +194,7 @@ export default function Admin() {
                     <option value="">Choisir produit...</option>
                     {inventory.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                   </select>
-                  <textarea placeholder="Description détaillée (Amazon Style)..." value={formBuilder.description_longue} onChange={e => setFormBuilder({...formBuilder, description_longue: e.target.value})} className="w-full bg-slate-800/40 border border-slate-700 p-3 rounded-xl text-xs h-48 outline-none focus:border-blue-500" />
+                  <textarea placeholder="Description détaillée ..." value={formBuilder.description_longue} onChange={e => setFormBuilder({...formBuilder, description_longue: e.target.value})} className="w-full bg-slate-800/40 border border-slate-700 p-3 rounded-xl text-xs h-48 outline-none focus:border-blue-500" />
                   <textarea placeholder="Galerie URLs (url1, url2...)" value={formBuilder.images_secondaires} onChange={e => setFormBuilder({...formBuilder, images_secondaires: e.target.value})} className="w-full bg-slate-800/40 border border-slate-700 p-3 rounded-xl text-[10px] h-24 outline-none focus:border-blue-500" />
                   <button className="w-full py-4 rounded-3xl font-black text-[10px] uppercase bg-blue-600 shadow-xl shadow-blue-900/30">Générer Page Perso</button>
                 </form>
