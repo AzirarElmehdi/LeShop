@@ -4,7 +4,6 @@ import { useShop } from '../../context/ShopContext'
 import AdminCard from './AdminCard'
 import Layout from '../layout/Layout' 
 
-
 export default function Admin() {
   // --- SHOP CONTEXT ---
   const { campaigns, setCampaigns, stores, setStores } = useShop()
@@ -59,16 +58,29 @@ export default function Admin() {
       setFormBuilder({ description_longue: '', images_secondaires: '' });
     }
   };
+
   const handleProductSubmit = async (e) => {
     e.preventDefault()
     // Cast forcé des types pour éviter les erreurs de schéma Supabase
-    const payload = { ...form, price: parseFloat(form.price), discount: parseInt(form.discount || 0), Stock: parseInt(form.stock || 0) }
+    // CORRECTION : On mappe explicitement chaque champ pour éviter d'envoyer 'stock' et 'imageUrl' à Supabase
+    const payload = { 
+      name: form.name,
+      category: form.category,
+      brand: form.brand,
+      image_url: form.imageUrl, // Mappé correctement pour Supabase
+      price: parseFloat(form.price), 
+      discount: parseInt(form.discount || 0), 
+      Stock: parseInt(form.stock || 0) // Mappé correctement pour Supabase (majuscule)
+    }
+
     if (editingId) {
       const { data, error } = await supabase.from('products').update(payload).eq('id', editingId).select()
-      if (!error) setInventory(inventory.map(item => item.id === editingId ? data[0] : item))
+      if (error) console.error("Erreur update:", error)
+      if (!error && data) setInventory(inventory.map(item => item.id === editingId ? data[0] : item))
     } else {
       const { data, error } = await supabase.from('products').insert([payload]).select()
-      if (!error) setInventory([data[0], ...inventory])
+      if (error) console.error("Erreur insert:", error)
+      if (!error && data) setInventory([data[0], ...inventory])
     }
     setEditingId(null); setForm({ name: '', price: '', category: '', brand: '', imageUrl: '', discount: '', stock: '' })
   }
