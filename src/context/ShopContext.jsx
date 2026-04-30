@@ -34,4 +34,5 @@ export const ShopProvider = ({ children }) => {
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useShop() { return useContext(ShopContext) };

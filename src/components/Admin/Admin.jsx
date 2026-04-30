@@ -178,7 +178,7 @@ export default function Admin() {
               {currentView === 'builder' && (
                 <form onSubmit={handleBuilderSubmit} className="space-y-4">
                   <p className="text-[10px] font-bold text-blue-500 uppercase tracking-widest italic">Page Builder</p>
-                  <select value={selectedProductForBuilder} onChange={e => setSelectedProductForBuilder(e.target.value)} className="w-full bg-slate-800/40 border border-slate-700 p-2.5 rounded-xl text-sm text-white">
+                  <select value={selectedProductForBuilder} onChange={handleProductSelect} className="w-full bg-slate-800/40 border border-slate-700 p-2.5 rounded-xl text-sm text-white">
                     <option value="">Choisir produit...</option>
                     {inventory.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                   </select>
