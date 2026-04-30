@@ -8,13 +8,16 @@ export default function LoginForm() {
 
   const handleLogin = async (e) => {
     e.preventDefault()
+    // Verrouillage de l'UI pour éviter les appels API en doublon
     setLoading(true)
     
+    // Auth classique par password, on n'utilise pas de Magic Link pour le portail admin
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     })
 
+    // Feedback d'erreur basique, suffisant pour la phase MVP de l'admin
     if (error) {
       alert("Erreur d'authentification : " + error.message)
     }
@@ -47,6 +50,7 @@ export default function LoginForm() {
               required
             />
           </div>
+          {/* L'active:scale-95 permet de simuler un clic physique sur mobile/desktop */}
           <button 
             disabled={loading}
             className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-xl transition-all active:scale-95 disabled:opacity-50"

@@ -7,13 +7,13 @@ export default function AuthGuard({ children }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Vérifie la session actuelle au chargement
+    // Check initial pour éviter le flash de contenu protégé au refresh
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
       setLoading(false)
     })
 
-    // Changements d'état (login/logout)
+    // Listener pour sync l'état local dès que Supabase détecte un changement
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session)
     })
@@ -21,6 +21,7 @@ export default function AuthGuard({ children }) {
     return () => subscription.unsubscribe()
   }, [])
 
+  // On bloque le rendu tant que l'API n'a pas confirmé le statut auth
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-950">
@@ -29,11 +30,10 @@ export default function AuthGuard({ children }) {
     )
   }
 
-  // Si pas de session, on affiche le formulaire de Login.
+  // Redirection forcée vers le login si le token est manquant ou expiré
   if (!session) {
     return <LoginForm />
   }
 
-  // Si session connecter, on affiche la page demandée.
   return <>{children}</>
 }

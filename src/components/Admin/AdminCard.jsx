@@ -2,10 +2,10 @@ import { calculateFinalPrice } from '../../utils/priceEngine'
 
 export default function AdminCard({ product, onEdit, onDelete, globalSales = [] }) {
 
-  // On récupère le stock
+  // Sécu sur le typage pour éviter les erreurs d'affichage si la DB renvoie null
   const stockQty = Number(product.Stock ?? 0);
 
-  // Moteur de prix
+  // Centralisation du calcul via le priceengine
   const { finalPrice, hasDiscount, details } = calculateFinalPrice(product, globalSales);
 
   return (
@@ -53,13 +53,13 @@ export default function AdminCard({ product, onEdit, onDelete, globalSales = [] 
         </button>
       </div>
 
-      {/* Image produit */}
       <div className="h-44 overflow-hidden bg-slate-800 relative">
         <img 
           src={product.image_url} 
           alt={product.name} 
           className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700 ease-in-out" 
         />
+        {/* Overlay pour assurer le contraste des badges promo sur les images claires */}
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 to-transparent opacity-60" />
       </div>
       
@@ -82,7 +82,6 @@ export default function AdminCard({ product, onEdit, onDelete, globalSales = [] 
           )}
         </div>
 
-        {/* Footer : catégorie / brand / FOMO */}
         <div className="flex items-center gap-2 pt-4 border-t border-slate-800/40 mt-auto">
           
           <span className="text-[7px] uppercase font-black tracking-[0.2em] bg-slate-800 text-slate-500 px-2.5 py-1 rounded-full border border-slate-700/30">
@@ -95,7 +94,7 @@ export default function AdminCard({ product, onEdit, onDelete, globalSales = [] 
             </span>
           )}
           
-          {/* FOMO : rupture / stock faible */}
+          {/* Alertes de stock : Priorité au Sold out pour éviter les commandes fantômes */}
           {stockQty <= 0 ? (
             <span className="ml-auto text-[8px] font-black uppercase tracking-widest px-2 py-1 rounded-md bg-red-500/10 text-red-500 border border-red-500/20 animate-pulse">
               SOLD OUT
