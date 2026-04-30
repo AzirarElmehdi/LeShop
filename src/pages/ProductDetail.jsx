@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import Layout from '../components/layout/Layout'
+import AddToCartButton from '../components/UI/AddToCartButton'
 
 export default function ProductDetail() {
   const { id } = useParams() // Capte l'ID dans l'URL

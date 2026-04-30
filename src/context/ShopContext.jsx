@@ -34,4 +34,4 @@ export const ShopProvider = ({ children }) => {
   );
 };
 
-export const useShop = () => useContext(ShopContext);
+export function useCart() { return useContext(ShopContext) };

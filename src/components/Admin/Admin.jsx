@@ -4,7 +4,6 @@ import { useShop } from '../../context/ShopContext'
 import AdminCard from './AdminCard'
 import Layout from '../layout/Layout' 
 
-const ITEMS_PER_PAGE = 24;
 
 export default function Admin() {
   // --- SHOP CONTEXT ---
@@ -47,16 +46,14 @@ export default function Admin() {
 
   // Mapping automatique des données pour éviter de tout resaisir en mode builder
   useEffect(() => {
-    if (selectedProductForBuilder) {
-      const prod = inventory.find(p => p.id == selectedProductForBuilder)
-      if (prod) {
-        setFormBuilder({
-          description_longue: prod.description_longue || '',
-          images_secondaires: prod.images_secondaires ? prod.images_secondaires.join(', ') : ''
-        })
-      }
-    }
-  }, [selectedProductForBuilder, inventory])
+    if (!selectedProductForBuilder) return
+    const prod = inventory.find(p => p.id == selectedProductForBuilder)
+    if (!prod) return
+    setFormBuilder({
+    description_longue: prod.description_longue || '',
+    images_secondaires: prod.images_secondaires ? prod.images_secondaires.join(', ') : ''
+    })
+  }, [selectedProductForBuilder])
 
   const handleProductSubmit = async (e) => {
     e.preventDefault()
